@@ -2,6 +2,12 @@ mock_provider "aws" {
   mock_resource "aws_lambda_function" {
     defaults = { version = "7" }
   }
+  mock_resource "aws_lambda_alias" {
+    defaults = { invoke_arn = "arn:aws:apigateway:eu-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-2:123456789012:function:slpage-dev:live/invocations" }
+  }
+  mock_resource "aws_cloudwatch_log_group" {
+    defaults = { arn = "arn:aws:logs:eu-west-2:123456789012:log-group:/aws/apigateway/slpage-dev" }
+  }
 }
 
 variables {

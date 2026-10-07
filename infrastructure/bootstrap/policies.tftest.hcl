@@ -11,6 +11,9 @@ mock_provider "aws" {
   mock_resource "aws_iam_role" {
     defaults = { arn = "arn:aws:iam::123456789012:role/slpage-dev-runtime" }
   }
+  mock_resource "aws_iam_policy" {
+    defaults = { arn = "arn:aws:iam::123456789012:policy/slpage-dev-test" }
+  }
 }
 
 variables {
