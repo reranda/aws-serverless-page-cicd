@@ -1,0 +1,7 @@
+directory: infrastructure
+framework: terraform
+download-external-modules: false
+quiet: true
+compact: true
+skip-download: true
+skip-results-upload: true

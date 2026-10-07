@@ -1,0 +1,27 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+!*.tfvars.json.example
+infrastructure/bootstrap/backend.tf
+build/
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+*.zip
+*.enc
+*.log
+
+# Commit .terraform.lock.hcl; it contains verified provider checksums.

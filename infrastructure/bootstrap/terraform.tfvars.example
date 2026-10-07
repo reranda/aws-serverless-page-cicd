@@ -1,0 +1,17 @@
+# Copy to terraform.tfvars locally and never commit the real values.
+expected_account_id = "123456789012"
+aws_region          = "eu-west-2"
+project             = "slpage"
+
+# The provider already exists in the earlier personal Terraform lab.
+create_oidc_provider = false
+enable_github_oidc   = false
+
+# Inspect: aws apigateway get-account --region eu-west-2
+# Reuse the existing role whenever one is configured.
+existing_api_gateway_cloudwatch_role_arn = "arn:aws:iam::123456789012:role/ExistingApiGatewayLogsRole"
+manage_api_gateway_account              = false
+
+# If no logging role exists, remove the example ARN and explicitly opt in:
+# existing_api_gateway_cloudwatch_role_arn = ""
+# manage_api_gateway_account              = true

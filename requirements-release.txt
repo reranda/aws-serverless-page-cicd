@@ -1,0 +1,2 @@
+# Build/release tooling only; the Lambda function uses the Python standard library.
+cryptography==50.0.2

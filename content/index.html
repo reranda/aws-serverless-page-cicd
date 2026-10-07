@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AWS Serverless Page Lab</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { max-width: 48rem; margin: 5rem auto; padding: 0 1.5rem; line-height: 1.7; }
+    h1 { line-height: 1.15; font-size: clamp(2rem, 6vw, 3rem); }
+    .label { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; }
+    .card { border: 1px solid #8886; border-radius: 1rem; padding: 1.5rem; }
+    code { padding: .1rem .35rem; border-radius: .25rem; background: #8882; }
+  </style>
+</head>
+<body>
+  <p class="label">Eranda Welgama · Independent cloud engineering lab</p>
+  <h1>A page delivered through AWS API Gateway and Lambda.</h1>
+  <p>This HTML file lives in Git. Each release packages the reviewed file with a
+     Python Lambda function and provisions the application using Terraform.</p>
+  <div class="card">
+    <h2>How this release reaches you</h2>
+    <p>A pull request runs application and infrastructure checks. A deliberate
+       GitHub Actions deployment reviews a saved Terraform plan, updates a
+       published Lambda version, and verifies the page through the API.</p>
+    <p>The <code>/health</code> endpoint reports the source commit and the content
+       digest of the running release.</p>
+  </div>
+  <p>This is a portfolio lab using fictional content and independent infrastructure.</p>
+</body>
+</html>
