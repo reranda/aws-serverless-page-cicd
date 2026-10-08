@@ -1,0 +1,138 @@
+name: Private lab release
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Operation
+        type: choice
+        options: [plan, deploy, destroy]
+        default: plan
+        required: true
+      confirmation:
+        description: 'Destroy only: type DESTROY serverless-page-production'
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: serverless-page-production
+  cancel-in-progress: false
+env:
+  RELEASE_MODE: private-lab
+  TF_IN_AUTOMATION: 'true'
+  TF_INPUT: 'false'
+  PROJECT_CONFIG: ${{ vars.PROJECT_CONFIG }}
+  LAB_DEPLOYMENT_READY: ${{ vars.LAB_DEPLOYMENT_READY }}
+  OPERATION: ${{ inputs.operation }}
+  CONFIRMATION: ${{ inputs.confirmation }}
+jobs:
+  plan:
+    name: Plan
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.13'
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
+        with:
+          terraform_version: '1.16.5'
+          terraform_wrapper: false
+      - name: Check source, operation and configuration
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/guard.py
+          python -m unittest discover -s tests -v
+          python scripts/build.py --commit "$GITHUB_SHA"
+          python scripts/prepare.py
+          python -c 'import json,os; c=json.loads(os.environ["PROJECT_CONFIG"]); print("ROLE_ARN="+c["plan_role_arn"]); print("AWS_REGION="+c["region"]); print("ACCOUNT_ID="+c["account_id"])' >> "$GITHUB_ENV"
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+        with:
+          role-to-assume: ${{ env.ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          allowed-account-ids: ${{ env.ACCOUNT_ID }}
+          role-session-name: plan-${{ github.run_id }}
+      - name: Generate the saved plan
+        working-directory: infrastructure/app
+        run: |
+          terraform init -backend-config=.build/backend.hcl -lockfile=readonly
+          terraform validate -no-color
+          args=()
+          if [ "$OPERATION" = destroy ]; then args+=(-destroy); fi
+          terraform plan "${args[@]}" -var-file=.build/inputs.tfvars.json -out=.build/release.tfplan -no-color
+          terraform show -no-color .build/release.tfplan > .build/plan.txt
+          python -c 'import time,pathlib; pathlib.Path(".build/planned-at").write_text(str(time.time()))'
+          if [ "$OPERATION" = plan ]; then
+            echo "### Private lab: Plan only; no Apply job" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Private lab: Apply follows this plan automatically; no approval gate" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "Operation: $OPERATION; source: $GITHUB_SHA; expiry: six hours." >> "$GITHUB_STEP_SUMMARY"
+          echo 'Destroy removes application resources; bootstrap resources and retained logs remain.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: saved-plan-${{ github.run_id }}
+          path: infrastructure/app/.build/
+          include-hidden-files: true
+          retention-days: 1
+          if-no-files-found: error
+  apply:
+    name: Apply
+    needs: plan
+    if: inputs.operation != 'plan'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.13'
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
+        with:
+          terraform_version: '1.16.5'
+          terraform_wrapper: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: saved-plan-${{ github.run_id }}
+          path: infrastructure/app/.build
+      - name: Check source and plan age
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/guard.py
+          python -c 'import json,os; c=json.loads(os.environ["PROJECT_CONFIG"]); print("ROLE_ARN="+c["deploy_role_arn"]); print("AWS_REGION="+c["region"]); print("ACCOUNT_ID="+c["account_id"])' >> "$GITHUB_ENV"
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+        with:
+          role-to-assume: ${{ env.ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          allowed-account-ids: ${{ env.ACCOUNT_ID }}
+          role-session-name: apply-${{ github.run_id }}
+      - name: Apply the exact saved plan
+        working-directory: infrastructure/app
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          terraform init -backend-config=.build/backend.hcl -lockfile=readonly
+          python ../../scripts/guard.py
+          terraform apply -input=false -no-color .build/release.tfplan
+      - name: Verify the deployed page and infrastructure convergence
+        if: inputs.operation == 'deploy'
+        run: |
+          url=$(terraform -chdir=infrastructure/app output -raw page_url)
+          python scripts/smoke.py --url "$url" --commit "$GITHUB_SHA"
+          terraform -chdir=infrastructure/app plan -var-file=.build/inputs.tfvars.json -detailed-exitcode -no-color
+          echo "Verified release $GITHUB_SHA: $url" >> "$GITHUB_STEP_SUMMARY"
+

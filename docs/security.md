@@ -2,6 +2,8 @@
 
 This is an anonymous public **read-only demonstration page**. It has no login, personal/customer data, database, writable API, or runtime GitHub access. Use a dedicated AWS lab account. It is not a complete production landing zone.
 
+The currently selected [private lab mode](private-lab.md) keeps the source repository private and explicitly defers branch/environment approval enforcement. Its exact branch-bound OIDC subject replaces environment subjects, and a manually dispatched deploy applies its generated plan automatically. The environment approval and administrator-enforcement statements below describe the separate reviewed mode, not active private lab controls.
+
 ## Enforced in code
 
 - Exact OIDC audience and environment subjects; trust disabled by default.

@@ -27,3 +27,26 @@ class GuardTests(unittest.TestCase):
             validate({**self.env, "OPERATION": "destroy"})
         validate({**self.env, "OPERATION": "destroy", "CONFIRMATION": "DESTROY serverless-page-production"})
 
+    def test_private_lab_needs_its_own_enable_flag(self):
+        lab = {**self.env, "RELEASE_MODE": "private-lab", "DEPLOYMENT_CONTROLS_READY": "false"}
+        with self.assertRaises(ValueError):
+            validate(lab)
+        validate({**lab, "LAB_DEPLOYMENT_READY": "true"})
+
+    def test_private_lab_does_not_authorize_reviewed_release(self):
+        with self.assertRaises(ValueError):
+            validate({**self.env, "DEPLOYMENT_CONTROLS_READY": "false", "LAB_DEPLOYMENT_READY": "true"})
+
+    def test_unknown_mode_rejected(self):
+        with self.assertRaises(ValueError):
+            validate({**self.env, "RELEASE_MODE": "unknown"})
+
+    def test_plan_only_private_run(self):
+        validate({**self.env, "RELEASE_MODE": "private-lab", "LAB_DEPLOYMENT_READY": "true", "OPERATION": "plan"})
+        with self.assertRaises(ValueError):
+            validate({**self.env, "OPERATION": "plan"})
+
+    def test_configuration_mode_mismatch_rejected(self):
+        with self.assertRaises(ValueError):
+            validate({**self.env, "PROJECT_CONFIG": '{"deployment_mode":"private-lab"}'})
+

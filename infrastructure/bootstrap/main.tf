@@ -96,7 +96,7 @@ resource "aws_iam_role" "ci" {
     Effect = "Allow", Action = "sts:AssumeRoleWithWebIdentity", Principal = { Federated = local.oidc_arn },
     Condition = { StringEquals = {
       "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com",
-      "token.actions.githubusercontent.com:sub" = var.enable_ci_trust ? "repo:${var.repository}:environment:${each.value}" : "CI-TRUST-DISABLED"
+      "token.actions.githubusercontent.com:sub" = var.enable_ci_trust ? (var.deployment_mode == "private-lab" ? "repo:${var.oidc_repository}:ref:refs/heads/main" : "repo:${var.oidc_repository}:environment:${each.value}") : "CI-TRUST-DISABLED"
     } }
   }] })
   depends_on = [aws_iam_openid_connect_provider.github]

@@ -4,4 +4,7 @@ region               = "eu-west-2"
 repository           = "reranda/aws-serverless-page-cicd"
 create_oidc_provider = false
 enable_ci_trust      = false
+deployment_mode      = "private-lab"
+# Verify with the OIDC subject check workflow before enabling trust.
+oidc_repository      = "reranda@39367723/aws-serverless-page-cicd@1409182803"
 

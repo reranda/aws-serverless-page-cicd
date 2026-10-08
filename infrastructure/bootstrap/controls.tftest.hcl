@@ -51,12 +51,28 @@ run "exact_oidc_subjects_when_enabled" {
   command = plan
   variables { enable_ci_trust = true }
   assert {
-    condition     = jsondecode(aws_iam_role.ci["plan"].assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:reranda/aws-serverless-page-cicd:environment:production-plan"
+    condition     = jsondecode(aws_iam_role.ci["plan"].assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:reranda@39367723/aws-serverless-page-cicd@1409182803:environment:production-plan"
     error_message = "Planning trust must bind to the exact repository and environment."
   }
   assert {
-    condition     = jsondecode(aws_iam_role.ci["deploy"].assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:reranda/aws-serverless-page-cicd:environment:production"
+    condition     = jsondecode(aws_iam_role.ci["deploy"].assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:reranda@39367723/aws-serverless-page-cicd@1409182803:environment:production"
     error_message = "Deployment trust must bind to the exact protected environment."
   }
 }
 
+
+run "private_lab_exact_main_subject" {
+  command = plan
+  variables {
+    enable_ci_trust = true
+    deployment_mode = "private-lab"
+  }
+  assert {
+    condition     = alltrue([for role in aws_iam_role.ci : jsondecode(role.assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:reranda@39367723/aws-serverless-page-cicd@1409182803:ref:refs/heads/main"])
+    error_message = "Private lab OIDC must bind to the exact repository and main branch without wildcard trust."
+  }
+  assert {
+    condition     = output.github_config.runtime_role_arn == aws_iam_role.runtime.arn && output.github_config.deployment_mode == "private-lab"
+    error_message = "The release configuration must include the runtime identity and selected mode."
+  }
+}

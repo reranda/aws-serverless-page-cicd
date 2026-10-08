@@ -1,5 +1,7 @@
 # CLI-only setup
 
+For the currently selected **GitHub Free/private repository without approval gates**, follow [the private lab guide](private-lab.md). This guide's environment protection steps apply to the separate reviewed mode. Both modes use the same bootstrap resources and state migration process.
+
 Use PowerShell 7, Python 3.13, Terraform 1.16.5, AWS CLI v2, Git, and GitHub CLI (`gh`). The checked-in provider locks select AWS provider 6.68.0; update them through a PR rather than deleting them.
 
 The GitHub connector can publish code and PRs, but does not expose repository-administration writes or an AWS account session. These commands perform the remaining setup from your authenticated workstation. Do not paste access keys or tokens into chat or commit them.
@@ -40,9 +42,9 @@ Copy-Item infrastructure/bootstrap/terraform.tfvars.example infrastructure/boots
 Edit the new, ignored `terraform.tfvars`: replace the account ID and choose a unique bucket such as `serverless-page-tfstate-<account-id>-eu-west-2`. Keep `enable_ci_trust = false`. If the OIDC provider is absent, set `create_oidc_provider = true`. An existing provider remains owned by its original project; do not import it here unless deliberately transferring ownership.
 
 ```powershell
-terraform -chdir=infrastructure/bootstrap init -lockfile=readonly
-terraform -chdir=infrastructure/bootstrap plan -out=bootstrap.tfplan
-terraform -chdir=infrastructure/bootstrap apply bootstrap.tfplan
+terraform "-chdir=infrastructure/bootstrap" init -lockfile=readonly
+terraform "-chdir=infrastructure/bootstrap" plan "-out=bootstrap.tfplan"
+terraform "-chdir=infrastructure/bootstrap" apply bootstrap.tfplan
 python -c 'import pathlib,subprocess; pathlib.Path("project-config.json").write_bytes(subprocess.check_output(["terraform","-chdir=infrastructure/bootstrap","output","-json","github_config"]))'
 ```
 
@@ -61,11 +63,11 @@ allowed_account_ids = ["123456789012"]
 
 ```powershell
 Copy-Item infrastructure/bootstrap/backend.tf.example infrastructure/bootstrap/backend.tf
-terraform -chdir=infrastructure/bootstrap init -migrate-state -backend-config=backend.hcl
-terraform -chdir=infrastructure/bootstrap state list
+terraform "-chdir=infrastructure/bootstrap" init -migrate-state "-backend-config=backend.hcl"
+terraform "-chdir=infrastructure/bootstrap" state list
 ```
 
-On future clones, create both bootstrap backend files and run `init -backend-config=backend.hcl` **before any bootstrap plan/apply**, so Terraform opens existing remote state instead of recreating resources. Bootstrap state uses `bootstrap/terraform.tfstate`; application state uses `production/terraform.tfstate`. CI has no access to bootstrap state.
+On future clones, create both bootstrap backend files and run `init "-backend-config=backend.hcl"` **before any bootstrap plan/apply**, so Terraform opens existing remote state instead of recreating resources. Bootstrap state uses `bootstrap/terraform.tfstate`; application state uses `production/terraform.tfstate`. CI has no access to bootstrap state.
 
 ## 4. Merge the implementation after CI and review
 
@@ -97,11 +99,11 @@ The script first disables releases, requires PRs/checks, blocks force pushes/del
 Only after step 5 succeeds, set `enable_ci_trust = true` in your local bootstrap `terraform.tfvars`.
 
 ```powershell
-terraform -chdir=infrastructure/bootstrap plan -out=bootstrap.tfplan
-terraform -chdir=infrastructure/bootstrap apply bootstrap.tfplan
+terraform "-chdir=infrastructure/bootstrap" plan "-out=bootstrap.tfplan"
+terraform "-chdir=infrastructure/bootstrap" apply bootstrap.tfplan
 ```
 
-This allows only `repo:reranda/aws-serverless-page-cicd:environment:production-plan` for the planning role and the corresponding `production` subject for the deployment role. GitHub's verified environment branch policies restrict those subjects to `main`.
+In reviewed mode, set `deployment_mode = "reviewed"`. Trust allows only the exact `production-plan` and `production` environment subjects for the selected OIDC repository identity. Newer repositories include immutable owner/repository IDs. Verify the actual subject format before enabling trust; see the private lab guide for the branch-subject check. GitHub's verified environment branch policies restrict reviewed environment subjects to `main`.
 
 ## 7. Deploy and capture evidence
 
