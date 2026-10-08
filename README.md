@@ -6,9 +6,9 @@ An independent portfolio lab by **Eranda Welgama**: publish a Git-managed HTML p
 
 **Current setup choice:** keep the repository private on GitHub Free and defer approval controls. Use [private lab mode](docs/private-lab.md), which offers manual plan/deploy/destroy runs without GitHub environments. The reviewed release design described below remains available for later adoption; its approval controls are not active in private lab mode.
 
-**Status:** first live private-lab release verified on **2026-10-08**. Bootstrap state is in S3; GitHub Actions authenticated through OIDC, applied the saved application plan, verified the exact Git HTML and release SHA, and confirmed zero infrastructure changes. [Deployment evidence](docs/validation.md) records what passed and what remains to test. This is an independent portfolio lab.
+**Status:** initial deployment, log delivery, content update and rollback verified on **2026-10-08**. Bootstrap state is in S3; GitHub Actions authenticated through OIDC, applied saved application plans, verified the exact Git HTML and release SHAs, and confirmed no Terraform drift. The latest verified live release is Lambda version 3 with the original page restored. Alarm notification delivery and application teardown remain to test. [Deployment evidence](docs/validation.md) records what passed and what remains to test. This is an independent portfolio lab.
 
-[Open the demonstration page](https://7rui87ai19.execute-api.eu-west-2.amazonaws.com/) · [Successful deployment run](https://github.com/reranda/aws-serverless-page-cicd/actions/runs/37806115128)
+[Open the demonstration page](https://7rui87ai19.execute-api.eu-west-2.amazonaws.com/) · [Verified rollback run](https://github.com/reranda/aws-serverless-page-cicd/actions/runs/37810175688)
 
 The source page lives in [`content/index.html`](content/index.html). CI packages it together with a Python handler and a release manifest. Lambda reads the packaged file and returns `text/html` through an HTTP API. It needs neither a GitHub credential nor an outbound request to GitHub.
 
@@ -35,7 +35,7 @@ flowchart TD
 | Application security | Read-only routes, fixed packaged file, CSP, HTTPS response headers and bounded concurrency |
 | Observability | JSON access/function logs, 30-day retention, Lambda/API error alarms and an SNS topic |
 | Supply chain | Actions pinned to full commit SHAs, provider locks, Dependabot, dependency-free Lambda |
-| Recovery | Git revert followed by a fresh release; explicit guarded destroy workflow; live rollback/teardown tests pending |
+| Recovery | Git revert followed by a fresh release; explicit guarded destroy workflow; live rollback verified; teardown test pending |
 
 Start with [setup](docs/setup.md), then use the [operating guide](docs/operations.md). [Security controls](docs/security.md) explains what is enforced, what requires account configuration, and the lab's limits. [Validation](docs/validation.md) records the evidence. [Portfolio roadmap](docs/portfolio-roadmap.md) keeps the remaining projects ahead of website construction.
 
