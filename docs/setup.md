@@ -8,10 +8,10 @@ The GitHub connector can publish code and PRs, but does not expose repository-ad
 
 ## 1. Get the new implementation
 
-For review before merging:
+For a fresh checkout of the current implementation:
 
 ```powershell
-git clone --branch rebuild/serverless-page-v2 https://github.com/reranda/aws-serverless-page-cicd.git
+git clone --branch main https://github.com/reranda/aws-serverless-page-cicd.git
 Set-Location aws-serverless-page-cicd
 gh auth status
 aws sts get-caller-identity
@@ -39,7 +39,7 @@ aws iam get-open-id-connect-provider --open-id-connect-provider-arn "arn:aws:iam
 Copy-Item infrastructure/bootstrap/terraform.tfvars.example infrastructure/bootstrap/terraform.tfvars
 ```
 
-Edit the new, ignored `terraform.tfvars`: replace the account ID and choose a unique bucket such as `serverless-page-tfstate-<account-id>-eu-west-2`. Keep `enable_ci_trust = false`. If the OIDC provider is absent, set `create_oidc_provider = true`. An existing provider remains owned by its original project; do not import it here unless deliberately transferring ownership.
+Edit the new, ignored `terraform.tfvars`: replace the account ID and choose a unique bucket such as `serverless-page-tfstate-<account-id>-eu-west-2`. For this reviewed-mode guide, set `deployment_mode = "reviewed"`; the example currently selects the private lab. Keep `enable_ci_trust = false`. If the OIDC provider is absent, set `create_oidc_provider = true`. An existing provider remains owned by its original project; do not import it here unless deliberately transferring ownership.
 
 ```powershell
 terraform "-chdir=infrastructure/bootstrap" init -lockfile=readonly

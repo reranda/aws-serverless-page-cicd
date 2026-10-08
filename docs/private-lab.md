@@ -19,7 +19,7 @@ If the provider directory does not exist, skip `Remove-Item`. The new lock was g
 
 ## Bootstrap configuration and initial plan
 
-Keep your existing account, bucket, region and repository values. Add this line once to your ignored `infrastructure/bootstrap/terraform.tfvars`:
+Keep your existing account, bucket, region and repository values. Set this value in your ignored `infrastructure/bootstrap/terraform.tfvars`, adding the line only if it is absent:
 
 ```hcl
 deployment_mode = "private-lab"
