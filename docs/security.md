@@ -19,7 +19,7 @@ This is an anonymous public **read-only demonstration page**. It has no login, p
 
 ## Account controls configured separately
 
-`scripts/configure_github.py` applies and verifies branch/environment protections through an administrator's local GitHub CLI. The assistant's connector does not expose these writes. In team mode, require one independent PR approval, dismiss stale reviews, resolve conversations, block force pushes/deletions, and enforce admins. Production approval prevents self review and bypass. CODEOWNERS identifies ownership; code owner approval itself is not required because the single owner authors this project's PRs.
+`scripts/configure_github.py` applies and verifies branch/environment protections through an administrator's local GitHub CLI. The assistant's connector does not expose these writes. In team mode, require one independent PR approval, require the `Checks` context from the GitHub Actions app (ID 15368), dismiss stale reviews, resolve conversations, block force pushes/deletions, and enforce admins. Production approval prevents self review and bypass. CODEOWNERS identifies ownership; code owner approval itself is not required because the single owner authors this project's PRs.
 
 Both OIDC subjects rely on verified GitHub environment policies allowing only the `main` **branch**, not tags or pull request merge refs. A readiness repository variable is an operational switch, not a replacement for those protections. Administrators capable of changing GitHub settings or bootstrap IAM remain trusted actors. This is not a sandbox for hostile administrators.
 

@@ -26,7 +26,7 @@ def configure(repo, reviewer, config, solo):
     viewer = api("user")["login"]
     review_user = api(f"users/{reviewer}")
     if not solo:
-        if reviewer == viewer:
+        if reviewer.casefold() == viewer.casefold():
             raise ValueError("Team mode requires an independent reviewer. Use --solo-lab explicitly for a solo demonstration.")
         permission = api(f"repos/{repo}/collaborators/{reviewer}/permission")["permission"]
         if permission not in {"write", "admin", "maintain"}:
@@ -37,7 +37,7 @@ def configure(repo, reviewer, config, solo):
                                      "allow_rebase_merge": False, "delete_branch_on_merge": True})
     expected = 0 if solo else 1
     api(f"repos/{repo}/branches/main/protection", "PUT", {
-        "required_status_checks": {"strict": True, "contexts": ["Checks"]},
+        "required_status_checks": {"strict": True, "checks": [{"context": "Checks", "app_id": 15368}]},
         "enforce_admins": True,
         "required_pull_request_reviews": {"dismiss_stale_reviews": True,
             "require_code_owner_reviews": False, "required_approving_review_count": expected},
@@ -61,7 +61,9 @@ def configure(repo, reviewer, config, solo):
     assert protection["enforce_admins"]["enabled"]
     assert protection["required_pull_request_reviews"]["required_approving_review_count"] == expected
     assert protection["required_status_checks"]["strict"]
-    assert "Checks" in protection["required_status_checks"]["contexts"]
+    assert {"context": "Checks", "app_id": 15368} in protection["required_status_checks"]["checks"]
+    assert protection["required_conversation_resolution"]["enabled"]
+    assert protection["required_pull_request_reviews"]["dismiss_stale_reviews"]
     assert not protection["allow_force_pushes"]["enabled"]
     assert not protection["allow_deletions"]["enabled"]
     for environment in ("production-plan", "production"):
