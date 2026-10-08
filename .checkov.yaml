@@ -1,0 +1,21 @@
+directory:
+  - infrastructure
+framework:
+  - terraform
+download-external-modules: false
+skip-download: true
+compact: true
+# Explicit baseline: state privacy/recovery and IAM scope. Other controls use Terraform tests.
+check:
+  - CKV_AWS_19
+  - CKV_AWS_20
+  - CKV_AWS_21
+  - CKV_AWS_53
+  - CKV_AWS_54
+  - CKV_AWS_55
+  - CKV_AWS_56
+  - CKV_AWS_61
+  - CKV_AWS_290
+  - CKV_AWS_355
+  - CKV_AWS_393
+
