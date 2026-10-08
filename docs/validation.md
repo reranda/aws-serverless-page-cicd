@@ -55,9 +55,21 @@ Inspected Apply logs for both runs confirmed zero additions, two changes and zer
 
 The rollback page hash matches the first release. Recovery used a fresh published version for the restored content, with `live` moved to version 3; it did not reset Git history or repoint the alias to version 1.
 
+## SNS and alarm notification delivery — verified
+
+The account owner's AWS CLI output and inbox confirmation on 2026-10-08 established:
+
+- An email subscription was created on the bootstrap alarm topic and confirmed. Its endpoint and subscription identifier are intentionally omitted from this record.
+- A direct SNS publish was accepted with message ID `5df1689f-3000-57b4-9126-0bdeed3f569c`; the account owner confirmed receipt of the test email.
+- Both error alarms had actions enabled and targeted the expected alarm topic.
+- Temporarily setting each alarm to `ALARM` produced a successful SNS action in CloudWatch alarm history, and the account owner confirmed receipt of the earlier alarm emails.
+- The alarms still showed the injected `ALARM` state at the initial readback. The account owner explicitly restored both to `OK`, and the final AWS CLI readback confirmed both were `OK`.
+- No recovery emails were expected: the configuration defines `alarm_actions` but no `ok_actions`.
+
+This verifies the CloudWatch alarm action → SNS → email path for both alarms. The state overrides did not create application errors or test detection of a genuine metric threshold breach. The subscription was configured separately by the account owner; it is not managed by the application Terraform root.
+
 ## Follow-up acceptance checks — pending
 
-- Confirm an SNS subscriber and test notification delivery.
 - Exercise guarded application teardown and document retained bootstrap resources and costs.
 
 Enforced branch and environment approval controls are intentionally deferred while this repository remains private on GitHub Free. They belong to the separate reviewed mode and are not claimed as active controls. The assistant has no direct AWS account session; bootstrap evidence comes from the account owner's CLI output, and application deployment evidence comes from the inspected GitHub Actions logs and supplied health response.
