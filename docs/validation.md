@@ -27,6 +27,8 @@ Both Terraform roots validated successfully on the GitHub runner, and all three 
 
 ## Live acceptance checks — pending
 
+The subsequent private-lab update adds Windows and Linux locks generated from signed publisher metadata, an exact main-branch OIDC trust mode, configuration compatibility guards, and an OIDC subject diagnostic. Its local Python suite passes 17 tests, and Terraform formatting and workflow YAML checks pass. [GitHub CI passed](https://github.com/reranda/aws-serverless-page-cicd/actions/runs/37755332734), including provider-backed schema validation, four mocked Terraform runs and the selected Checkov baseline. Private mode deliberately defers branch/environment approval enforcement; the checklist below describes the later reviewed mode.
+
 No AWS session is connected to the assistant. The rebuild has not created AWS resources or configured GitHub administration settings.
 
 - Bootstrap state migrated to the separate remote key and verified.

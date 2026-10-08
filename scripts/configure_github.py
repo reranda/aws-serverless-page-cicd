@@ -20,6 +20,8 @@ def api(path, method="GET", data=None):
 
 
 def configure(repo, reviewer, config, solo):
+    if json.loads(config.read_text(encoding="utf-8-sig")).get("deployment_mode") != "reviewed":
+        raise ValueError("Use deployment_mode = reviewed before configuring reviewed releases")
     # Disable releases first; leave them disabled on ANY failed setup operation.
     subprocess.run(["gh", "variable", "set", "DEPLOYMENT_CONTROLS_READY", "--repo", repo, "--body", "false"], check=True)
     metadata = api(f"repos/{repo}")

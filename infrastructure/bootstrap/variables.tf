@@ -23,7 +23,20 @@ variable "repository" {
 variable "enable_ci_trust" {
   type        = bool
   default     = false
-  description = "Enable only after CLI configuration verifies GitHub review and deployment controls."
+  description = "Enable after completing setup for the selected deployment mode."
+}
+variable "deployment_mode" {
+  type    = string
+  default = "reviewed"
+  validation {
+    condition     = contains(["reviewed", "private-lab"], var.deployment_mode)
+    error_message = "Choose reviewed or private-lab."
+  }
+}
+variable "oidc_repository" {
+  type        = string
+  default     = "reranda@39367723/aws-serverless-page-cicd@1409182803"
+  description = "Exact repository portion of the observed GitHub OIDC subject. New repositories use immutable IDs."
 }
 variable "create_oidc_provider" {
   type        = bool

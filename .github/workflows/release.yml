@@ -17,6 +17,7 @@ concurrency:
   group: serverless-page-production
   cancel-in-progress: false
 env:
+  RELEASE_MODE: reviewed
   TF_IN_AUTOMATION: 'true'
   TF_INPUT: 'false'
   PROJECT_CONFIG: ${{ vars.PROJECT_CONFIG }}

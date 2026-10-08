@@ -1,5 +1,7 @@
 # Releases, recovery and teardown
 
+The current private lab uses `private-lab.yml` with no approval gate. Follow [the private lab guide](private-lab.md) for setup, plan-only runs, deployment and teardown. Environment approval commands below apply only after switching to reviewed mode.
+
 ## Update the Git page
 
 ```powershell
@@ -13,9 +15,9 @@ git push -u origin content/update-page
 gh pr create --base main --fill
 ```
 
-CI tests the actual ZIP and Terraform controls without AWS credentials. Review and merge the PR, then dispatch `release.yml` on `main` with `operation=deploy`. Planning uses a read role (it may write/delete only the state lock); Apply waits for the environment approval and uses a separate deployment role.
+CI tests the actual ZIP and Terraform controls without AWS credentials. Merge the PR, then dispatch `private-lab.yml` on `main` with `operation=deploy`. This generates a fresh plan and applies it automatically. Use `operation=plan` for a plan-only run. Planning uses a read role (it may write/delete only the state lock); Apply uses a separate deployment role. In reviewed mode, dispatch `release.yml` instead; Apply waits for environment approval.
 
-The reviewer must inspect the Plan job and `plan.txt` from the matching run. Saved plans can contain sensitive infrastructure data; artifacts are restricted to repository access and retained for one day. Do not put secrets into Terraform inputs. GitHub encrypts stored artifacts, but this project does not add application-level artifact encryption.
+Inspect the Plan job and `plan.txt` from the matching run. In reviewed mode, the reviewer must do this before approving Apply. Saved plans can contain sensitive infrastructure data; artifacts are restricted to repository access and retained for one day. Do not put secrets into Terraform inputs. GitHub encrypts stored artifacts, but this project does not add application-level artifact encryption.
 
 ## Approve through CLI after reviewing
 
@@ -38,7 +40,7 @@ Use the real run and environment ID. Approval comes from the authorized reviewer
 
 ## Roll back
 
-Revert the faulty content or infrastructure change in a new branch, open a PR, merge after review, and run a new deployment. This produces a fresh published Lambda version for the reverted content and moves the `live` alias after approval. There is no automatic rollback that would bypass change review. If smoke verification fails, inspect the logs and stop further release activity until the cause is known.
+Revert the faulty content or infrastructure change in a new branch, open a PR, merge, and run a new deployment. This produces a fresh published Lambda version for the reverted content and moves the `live` alias. Reviewed mode additionally requires deployment approval. There is no automatic rollback. If smoke verification fails, inspect the logs and stop further release activity until the cause is known.
 
 ```powershell
 aws logs tail /aws/lambda/serverless-page-production --since 15m --region eu-west-2
@@ -61,10 +63,10 @@ Confirm the subscription in your inbox and test it. A topic without a confirmed 
 ## Destroy application resources
 
 ```powershell
-gh workflow run release.yml --ref main -f operation=destroy -f "confirmation=DESTROY serverless-page-production"
+gh workflow run private-lab.yml --ref main -f operation=destroy -f "confirmation=DESTROY serverless-page-production"
 ```
 
-Review and approve the destroy plan. It removes the function, live alias, Lambda permissions, API integration/routes and alarms. The bootstrap API container/default stage, IAM roles, logs, SNS topic and state bucket remain. With no routes, the endpoint returns 404. Retained logs, versions of state objects and any other residual resources can still incur costs.
+Private lab destroy plans and applies automatically. For reviewed mode, use `release.yml` and review and approve the destroy plan. Destroy removes the function, live alias, Lambda permissions, API integration/routes and alarms. The bootstrap API container/default stage, IAM roles, logs, SNS topic and state bucket remain. With no routes, the endpoint returns 404. Retained logs, versions of state objects and any other residual resources can still incur costs.
 
 Bootstrap teardown is a separate owner task. Disable `enable_ci_trust` and the GitHub readiness variable first. Review a bootstrap destroy plan and handle the state bucket separately: `prevent_destroy` and versioned contents deliberately block casual deletion. Do not remove the bucket storing the state of resources you still need to manage. This project never automatically deletes its backend.
 
