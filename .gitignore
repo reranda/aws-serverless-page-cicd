@@ -1,0 +1,16 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+backend.hcl
+infrastructure/bootstrap/backend.tf
+project-config.json
+bootstrap.tfplan
+.build/
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+
