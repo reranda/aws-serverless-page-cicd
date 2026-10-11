@@ -78,6 +78,14 @@ The account owner edited `content/index.html` on a feature branch, merged [PR #1
 
 The earlier SNS email subscription and its notification-delivery verification applied to the original topic before deletion. The topic has been recreated, but the new subscription and email delivery **are not yet reverified**. The old API URLs in historical sections above refer to prior evidence, not the active endpoint.
 
+## Replacement SNS notification path — verified 2026-10-11
+
+After the bootstrap SNS topic was recreated, the account owner subscribed an email endpoint and confirmed the subscription. AWS returned a real subscription ARN rather than `PendingConfirmation`. A direct SNS test publish returned message ID `44a97692-5763-5b74-bd53-15d7fc480db0`; the account owner explicitly confirmed receipt of the test email.
+
+An AWS CLI readback confirmed both `serverless-page-production-api-errors` and `serverless-page-production-lambda-errors` were `OK`, had `ActionsEnabled = true`, and had alarm actions pointing to the restored topic `arn:aws:sns:eu-west-2:709872263987:serverless-page-production-alarms`.
+
+This revalidates the direct SNS-to-email delivery path and the CloudWatch alarm action configuration after recovery. It does not re-test a CloudWatch alarm state transition after topic recreation. The email endpoint and subscription ARN are intentionally not published.
+
 ## Follow-up acceptance checks — pending
 
 - Recreate and confirm the email subscription on the replacement SNS topic, then verify actual notification delivery.\n- Exercise guarded application teardown and document retained bootstrap resources and costs.
