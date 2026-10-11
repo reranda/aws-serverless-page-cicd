@@ -1,6 +1,6 @@
 # Validation record
 
-Validation date: 2026-10-08. Current mode: **private-lab**, private repository, approval controls deferred.
+Initial validation date: 2026-10-08; recovery and latest release validation: 2026-10-11. Current mode: **private-lab**, private repository, approval controls deferred.
 
 ## Credential-free checks
 
@@ -68,8 +68,18 @@ The account owner's AWS CLI output and inbox confirmation on 2026-10-08 establis
 
 This verifies the CloudWatch alarm action → SNS → email path for both alarms. The state overrides did not create application errors or test detection of a genuine metric threshold breach. The subscription was configured separately by the account owner; it is not managed by the application Terraform root.
 
+## October 11 recovery and manual page release — verified
+
+The account owner's Terraform and AWS CLI outputs documented recovery after manual resource deletion. Refresh-only and ordinary bootstrap plans identified the absent API Gateway, its default stage, and SNS topic/policy. The saved bootstrap plan applied successfully: **4 added, 3 changed, 0 destroyed**, including IAM policy updates scoped to the replacement API. API Gateway ID changed from `7rui87ai19` to `2auiwp9odb`. The account owner verified the replacement API in AWS and updated the repository `PROJECT_CONFIG` and private-lab readiness variables through `scripts/configure_private_lab.py`.
+
+A subsequent [deployment run 38141370034](https://github.com/reranda/aws-serverless-page-cicd/actions/runs/38141370034) initially failed while trying to integrate with the deleted API ID. After bootstrap recovery, [application redeployment run 38147537296](https://github.com/reranda/aws-serverless-page-cicd/actions/runs/38147537296) passed Plan, Apply, page verification and Terraform convergence. The account owner's HTTP checks returned 200 for the [replacement page](https://2auiwp9odb.execute-api.eu-west-2.amazonaws.com/) and [health endpoint](https://2auiwp9odb.execute-api.eu-west-2.amazonaws.com/health).
+
+The account owner edited `content/index.html` on a feature branch, merged [PR #10](https://github.com/reranda/aws-serverless-page-cicd/pull/10) using squash, and dispatched [deployment run 38148490686](https://github.com/reranda/aws-serverless-page-cicd/actions/runs/38148490686). Both jobs passed, including exact-plan Apply and deployment/convergence verification. Independent HTTP checks found the heading **My AWS Serverless Portfolio Project**. The `/health` response reported commit `9fe3f162aa945e313c005d89dde78b9e01f6e136`, matching `git rev-parse HEAD`, and page SHA-256 `818db23ebbda60016893d22786e140122fab176770954b762c6c83da4218083f`.
+
+The earlier SNS email subscription and its notification-delivery verification applied to the original topic before deletion. The topic has been recreated, but the new subscription and email delivery **are not yet reverified**. The old API URLs in historical sections above refer to prior evidence, not the active endpoint.
+
 ## Follow-up acceptance checks — pending
 
-- Exercise guarded application teardown and document retained bootstrap resources and costs.
+- Recreate and confirm the email subscription on the replacement SNS topic, then verify actual notification delivery.\n- Exercise guarded application teardown and document retained bootstrap resources and costs.
 
 Enforced branch and environment approval controls are intentionally deferred while this repository remains private on GitHub Free. They belong to the separate reviewed mode and are not claimed as active controls. The assistant has no direct AWS account session; bootstrap evidence comes from the account owner's CLI output, and application deployment evidence comes from the inspected GitHub Actions logs and supplied health response.
