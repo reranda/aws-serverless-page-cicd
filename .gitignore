@@ -13,4 +13,7 @@ __pycache__/
 *.pyc
 .venv/
 .DS_Store
-
+# Local Terraform state backups
+state-backup/
+# S3 deletion manifests
+s3-delete-manifest.json
