@@ -76,7 +76,7 @@ A subsequent [deployment run 38141370034](https://github.com/reranda/aws-serverl
 
 The account owner edited `content/index.html` on a feature branch, merged [PR #10](https://github.com/reranda/aws-serverless-page-cicd/pull/10) using squash, and dispatched [deployment run 38148490686](https://github.com/reranda/aws-serverless-page-cicd/actions/runs/38148490686). Both jobs passed, including exact-plan Apply and deployment/convergence verification. Independent HTTP checks found the heading **My AWS Serverless Portfolio Project**. The `/health` response reported commit `9fe3f162aa945e313c005d89dde78b9e01f6e136`, matching `git rev-parse HEAD`, and page SHA-256 `818db23ebbda60016893d22786e140122fab176770954b762c6c83da4218083f`.
 
-The earlier SNS email subscription and its notification-delivery verification applied to the original topic before deletion. The topic has been recreated, but the new subscription and email delivery **are not yet reverified**. The old API URLs in historical sections above refer to prior evidence, not the active endpoint.
+The earlier SNS email subscription and its notification-delivery verification applied to the original topic before deletion. The replacement SNS subscription and delivery were subsequently reverified, as documented below. All API endpoint URLs in historical sections refer to earlier deployments and are no longer active following final teardown.
 
 ## Replacement SNS notification path — verified 2026-10-11
 
@@ -86,8 +86,16 @@ An AWS CLI readback confirmed both `serverless-page-production-api-errors` and `
 
 This revalidates the direct SNS-to-email delivery path and the CloudWatch alarm action configuration after recovery. It does not re-test a CloudWatch alarm state transition after topic recreation. The email endpoint and subscription ARN are intentionally not published.
 
-## Follow-up acceptance checks — pending
+## Final application and infrastructure teardown — verified 2026-10-12
 
-- Recreate and confirm the email subscription on the replacement SNS topic, then verify actual notification delivery.\n- Exercise guarded application teardown and document retained bootstrap resources and costs.
+After the validated content deployment, the account owner ran the private-lab application destroy workflow. Subsequent AWS CLI checks found no Lambda functions or matching application alarms, and API Gateway `2auiwp9odb` had no routes. A pre-bootstrap-teardown request to the route-free API returned HTTP 500, rather than the anticipated 404; the API itself was subsequently destroyed.
 
-Enforced branch and environment approval controls are intentionally deferred while this repository remains private on GitHub Free. They belong to the separate reviewed mode and are not claimed as active controls. The assistant has no direct AWS account session; bootstrap evidence comes from the account owner's CLI output, and application deployment evidence comes from the inspected GitHub Actions logs and supplied health response.
+The repository variable `LAB_DEPLOYMENT_READY` was set to `false`. Bootstrap Terraform then changed exactly two GitHub CI role trust policies to the `CI-TRUST-DISABLED` subject (0 added, 2 changed, 0 destroyed). The shared GitHub OIDC provider was not managed by this root and was intentionally preserved.
+
+The account owner saved local Terraform state backups outside the S3 bucket. A targeted Terraform bootstrap destroy completed with **15 resources destroyed**, covering the API Gateway API/stage, both log groups, the three lab IAM roles and their six inline policies, and the SNS topic/policy. The following targeted operation destroyed the **four bucket configuration resources**: TLS policy, public access block, encryption configuration and Terraform-managed versioning configuration. Terraform state then contained only `aws_s3_bucket.state`. Independent CLI checks returned no matching project IAM roles, SNS topic or CloudWatch log groups. The API Gateway CLI inventory check was interrupted, but Terraform reported successful API deletion.
+
+Before final bucket removal, a version inventory showed 53 historical object versions and 39 delete markers; the account owner then completed backend retirement and S3 bucket deletion. The final `aws s3api delete-bucket` command returned without error, and `head-bucket` returned **404 Not Found**, confirming removal of `serverless-page-tfstate-709872263987-eu-west-2`. The user reported the remaining cleanup steps were successful; individual version-deletion and `terraform state rm` command outputs were not supplied in chat.
+
+**Final status:** lab infrastructure intentionally offline; GitHub source, pull requests and successful Actions history retained as portfolio evidence. Local state backups should remain private and uncommitted. Restarting the lab requires reprovisioning the backend and bootstrap configuration rather than running the old deployment workflow unchanged.
+
+Enforced branch and environment approval controls were deferred throughout this private GitHub Free lab. This evidence is based on the account owner's AWS CLI/Terraform outputs and recorded GitHub Actions runs; it is not an independent AWS account-wide resource or billing audit.
